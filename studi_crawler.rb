@@ -105,11 +105,11 @@ class StudiCrawler
        goto :uri => @page.link_with(:text => 'Meine Freunde').uri
        next_page_sym = get_next_symbol
        fill_details
-       #while !@page.link_with(:text => next_page_sym).nil?
-	#  puts "Next page!"
-	#  goto :uri => @page.link_with(:text => next_page_sym).uri
-	#  fill_details
-       #end 
+       while !@page.link_with(:text => next_page_sym).nil?
+	  puts "Next page!"
+	  goto :uri => @page.link_with(:text => next_page_sym).uri
+	  fill_details
+       end 
        @page = oldpage
     end
 
