@@ -54,7 +54,8 @@ class StudiCrawler
        @friends ||= {}
        afterIdx = @page.links.index(@page.link_with(:text => 'Alle Freunde'))
        curfriends = @page.links[afterIdx+1..-3].select do |l| 
-	  @page.links[@page.links.index(l)+2].text.include? 'Freunde'
+	  (@page.links[@page.links.index(l)+2].text.include? 'Freunde'
+	   and l.uri.to_s =~ /\/Profile\//)
        end
        curfriends.each do |item|
 	  @friends[item.text.to_sym] = VCard.new
