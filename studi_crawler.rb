@@ -54,8 +54,7 @@ class StudiCrawler
        @friends ||= {}
        afterIdx = @page.links.index(@page.link_with(:text => 'Alle Freunde'))
        curfriends = @page.links[afterIdx+1..-3].select do |l| 
-	  (@page.links[@page.links.index(l)+2].text.include? 'Freunde'
-	   and l.uri.to_s =~ /\/Profile\//)
+	  ((@page.links[@page.links.index(l)+2].text.include? 'Freunde') and (l.uri.to_s =~ /\/Profile\//))
        end
        curfriends.each do |item|
 	  @friends[item.text.to_sym] = VCard.new
@@ -106,17 +105,17 @@ class StudiCrawler
        goto :uri => @page.link_with(:text => 'Meine Freunde').uri
        next_page_sym = get_next_symbol
        fill_details
-       while !@page.link_with(:text => next_page_sym).nil?
-	  puts "Next page!"
-	  goto :uri => @page.link_with(:text => next_page_sym).uri
-	  fill_details
-       end 
+#       while !@page.link_with(:text => next_page_sym).nil?
+#	  puts "Next page!"
+#	  goto :uri => @page.link_with(:text => next_page_sym).uri
+#	  fill_details
+#       end 
        @page = oldpage
     end
 
-    def export_friends
+    def export_friends filename
        friends.each do |name,vCard|
-	  vCard.export(name.to_s.gsub(" ", "_"))
+	  vCard.export(filename)
        end
     end
 end
