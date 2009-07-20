@@ -27,7 +27,6 @@ class VCard < OpenStruct
       :image => lambda { |n|
 	 img = Base64.encode64(Curl::Easy.perform(n).body_str).gsub(/\s+/s, "\n   ")
 	 "PHOTO;BASE64:\n   " + img.gsub(/   $/, "")
-	 #"PHOTO;VALUE=uri:"+n+"\n" 
       }
    }
 end
