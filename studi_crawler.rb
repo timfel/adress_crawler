@@ -3,9 +3,12 @@ require 'mechanize'
 require 'vcard'
 
 class StudiCrawler
+
+  @@login_url = 'https://secure.studivz.net/Login'
+
   def initialize mail,pw
     @agent = WWW::Mechanize.new
-    @page = @agent.get 'https://secure.studivz.net/Login'
+    @page = @agent.get @@login_url
     login mail,pw
   end
 
@@ -16,13 +19,17 @@ class StudiCrawler
     @page = forms.click_button
   end
 
-  def goto goto_dict
-    unless goto_dict[:uri].nil?
-      uri = goto_dict[:uri]
-      uri = @page.uri+uri unless uri.to_s =~ /^http/u
-      @page = @agent.get uri
+  # Goes to a page
+  # This can be either a full url, a sub-url 
+  # (which is then appended) or a friends name,
+  # for which an initial url-lookup is done 
+  def goto newPage
+    unless friends[newPage.to_sym].nil?
+      uri = friends[goto_dict[:name].to_sym].uri
     end
-    @page = @agent.get @page.uri+friends[goto_dict[:name].to_sym].uri unless goto_dict[:name].nil?
+    uri ||= newPage
+    uri = @page.uri+uri unless uri.to_s =~ /^http/u
+    @page = @agent.get uri
     @page
   end
 
