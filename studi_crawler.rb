@@ -4,14 +4,16 @@ require 'vcard'
 
 class StudiCrawler
 
-  @@login_url = 'https://secure.studivz.net/Login'
+  attr_accessor :login_url
+  @login_url = 'https://secure.studivz.net/Login'
 
   def initialize mail,pw
     @agent = WWW::Mechanize.new
-    @page = @agent.get @@login_url
+    @page = @agent.get login_url
     login mail,pw
   end
 
+  # tries to fill in the forms and login
   def login mail,pw
     forms = @page.forms.first
     forms.email=mail
@@ -25,7 +27,7 @@ class StudiCrawler
   # for which an initial url-lookup is done 
   def goto newPage
     unless friends[newPage.to_sym].nil?
-      uri = friends[goto_dict[:name].to_sym].uri
+      uri = friends[newPage.to_sym].uri
     end
     uri ||= newPage
     uri = @page.uri+uri unless uri.to_s =~ /^http/u
@@ -33,6 +35,7 @@ class StudiCrawler
     @page
   end
 
+  # lazy accessor
   def friends
     crawl_friends if @friends.nil?
     @friends
@@ -42,13 +45,15 @@ class StudiCrawler
     @friends[name.to_sym]
   end
 
+  # Accessing details. Lazily tries to 
+  # retrieve them using the get_DETAIL method
   [:image, :birthday].each do |item|
     define_method(item) do |name|
       f = friend(name)
       if f.send(item).nil?
         curpage = @page
         unless @page.uri.to_s =~ Regexp.new(f.uri.to_s+"$")
-          goto :uri => f.uri
+          goto f.uri
         end
         send(("get_"+item.to_s).to_sym, f)
         @page = curpage
@@ -59,10 +64,13 @@ class StudiCrawler
 
   def get_friends
     @friends ||= {}
+
+    #+TODO : refactor this out!
     afterIdx = @page.links.index(@page.link_with(:text => 'Alle Freunde'))
     curfriends = @page.links[afterIdx+1..-3].select do |l| 
       ((@page.links[@page.links.index(l)+2].text.include? 'Freunde') and (l.uri.to_s =~ /\/Profile\//))
     end
+
     curfriends.each do |item|
       @friends[item.text.to_sym] = VCard.new
       @friends[item.text.to_sym].uri = item.uri
@@ -98,7 +106,7 @@ class StudiCrawler
   def fill_details
     get_friends.each do |name,values|
       oldpage = @page
-      goto :uri => values.uri
+      goto values.uri
       birthday name
       image name
       print "."
@@ -109,12 +117,12 @@ class StudiCrawler
   def crawl_friends
     oldpage = @page
     # make sure we're on the friends list
-    goto :uri => @page.link_with(:text => 'Meine Freunde').uri
+    goto @page.link_with(:text => 'Meine Freunde').uri
     next_page_sym = get_next_symbol
     fill_details
     while !@page.link_with(:text => next_page_sym).nil?
       puts "Next page!"
-      goto :uri => @page.link_with(:text => next_page_sym).uri
+      goto @page.link_with(:text => next_page_sym).uri
       fill_details
     end 
     @page = oldpage
