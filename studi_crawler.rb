@@ -84,14 +84,19 @@ class StudiCrawler
     friend.birthday = page.text unless page.nil?
   end
 
-  def get_image friend
-    img = @page.search("#profileImage")
+  def extract_image_uri(id)
+    img = @page.search(id)
     unless img.nil?
       img.to_a.compact! 
       unless img.first.nil?
-        friend.image = img.first.attributes['src'] 
+	return img.first.attributes['src'] 
       end
     end
+    nil
+  end
+
+  def get_image(friend)
+    friend.image = extract_image_uri("#profileImage")
   end
 
   def get_next_symbol
@@ -125,6 +130,22 @@ class StudiCrawler
       goto @page.link_with(:text => next_page_sym).uri
       fill_details
     end 
+    @page = oldpage
+  end
+
+  def fill_img_uri
+     extract_image_uri("#PhotoContainer")
+  end
+
+  def crawl_album link
+    oldpage = @page
+    goto link.as_uri
+    fill_img_uri
+    while !@page.link_with(:text => "nächstes Foto >>").nil?
+       puts "Next Picture!"
+       goto @page.link_with(:text => "nächstes Foto >>").uri
+       fill_img_uri
+    end
     @page = oldpage
   end
 
